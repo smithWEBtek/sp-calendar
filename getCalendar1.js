@@ -4,7 +4,7 @@ import fs from 'fs';
 
 // Your public Google Calendar iCal URL
 const CALENDAR_URL = "https://calendar.google.com/calendar/ical/c_e0c52e8a02a5265d9dd2536fd336e0ae6a04081c9a1682186db5c3a24028f07d%40group.calendar.google.com/public/basic.ics";
-const OUTPUT_FILE = "gigs.csv";
+const OUTPUT_FILE = "calendar_output.csv";
 
 async function parseIcalToCsvFile(url, outputPath) {
     try {
@@ -27,20 +27,21 @@ async function parseIcalToCsvFile(url, outputPath) {
         
         for (let k in data) {
             if (Object.prototype.hasOwnProperty.call(data, k)) {
-                const today = new Date();
                 const event = data[k];
-                const end = event.end ? new Date(event.end) : null;
-                const start = event.start ? new Date(event.start) : null;
+                if (event.type === 'VEVENT') {
+                    const start = event.start ? new Date(event.start) : null;
+                    const end = event.end ? new Date(event.end) : null;
 
-                if (event.type === 'VEVENT' && start >= today) {
                     csvRows.push({
+                        // Keep the raw dates attached temporarily for sorting purposes
                         _rawStart: start, 
-                        'DATE': start ? start.toLocaleDateString('en-US') : '',
-                        'FROM': start && typeof start.getHours === 'function' ? start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
-                        'TO': end && typeof end.getHours === 'function' ? end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
                         Subject: event.summary || '',
-                        // Description: event.description || '',
-                        // Location: event.location || ''
+                        'Start Date': start ? start.toLocaleDateString('en-US') : '',
+                        'Start Time': start && typeof start.getHours === 'function' ? start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
+                        'End Date': end ? end.toLocaleDateString('en-US') : '',
+                        'End Time': end && typeof end.getHours === 'function' ? end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
+                        Description: event.description || '',
+                        Location: event.location || ''
                     });
                 }
             }
